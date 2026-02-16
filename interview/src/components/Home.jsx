@@ -18,7 +18,7 @@ export default function Home() {
   async function loadPolls() {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:3001/api/poll/all');
+      const response = await fetch('https://view-ezh5.onrender.com/api/poll/all');
       if (response.ok) {
         const data = await response.json();
         setPolls(data.polls || []);

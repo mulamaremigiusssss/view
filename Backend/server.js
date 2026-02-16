@@ -17,7 +17,7 @@ import mongoose from 'mongoose';
 
 async function connectDatabase() {
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://mulamaremigius33_db_user:oywPPKvPaZ3ndBkR@cluster0.nmyzylx.mongodb.net/';
+    const mongoUri = process.env.MONGODB_URI || '';
     
     await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 5000,
@@ -53,7 +53,7 @@ const pollConnections = new Map();
 
 
 wss.on('connection', (ws, req) => {
-  const url = new URL(req.url, 'https://view-ezh5.onrender.com');
+  const url = new URL(req.url, 'https://view-silk.vercel.app/');
   const pollId = url.searchParams.get('pollId');
   
   if (!pollId) {
