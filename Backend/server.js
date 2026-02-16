@@ -67,7 +67,6 @@ wss.on('connection', (ws, req) => {
   }
   pollConnections.get(pollId).add(ws);
   
-  console.log(`📡 WebSocket connected for poll: ${pollId} (${pollConnections.get(pollId).size} viewers)`);
   
   sendPollResults(pollId, ws);
   

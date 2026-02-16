@@ -7,31 +7,56 @@ import { useWebSocket } from '../hooks/useWebSocket';
 
 export default function Home() {
   const navigate = useNavigate();
-
+  const { refresh, setRefresh } = useWebSocket()
   const [polls, setPolls] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
+  const timeout = setTimeout(() => {
+    loadPolls(refresh);
+  }, 4000);
+
+  return () => clearTimeout(timeout);
+}, [refresh]);
+
+
+  useEffect(() => {
     loadPolls();
   }, []);
 
 
-  async function loadPolls() {
-    try {
+  async function loadPolls(background = false) {
+  try {
+    if (background) {
+      setIsLoading(false);
+    } else {
       setIsLoading(true);
-      const response = await fetch('https://view-ezh5.onrender.com/api/poll/all');
-      if (response.ok) {
-        const data = await response.json();
-        setPolls(data.polls || []);
-      }
-    } catch (err) {
-      setError('Failed to load polls');
-    } finally {
+    }
+
+    const response = await fetch(
+      'https://view-ezh5.onrender.com/api/poll/all'
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch polls');
+    }
+
+    const data = await response.json();
+    setPolls(data.polls || []);
+  } catch (err) {
+    console.error(err);
+    setError('Failed to load polls');
+  } finally {
+    if (background) {
+      setRefresh(false);
+    } else {
       setIsLoading(false);
     }
   }
+}
+
 
   const handlePollCreated = (pollId) => {
     setIsModalOpen(false);

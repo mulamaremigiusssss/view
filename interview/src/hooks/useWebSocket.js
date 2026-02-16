@@ -8,6 +8,7 @@ const POLLING_FALLBACK_INTERVAL = 3000;
 
 export function useWebSocket(pollId) {
   const [results, setResults] = useState(null);
+   const [refresh, setRefresh] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef(null);
   const reconnectAttempts = useRef(0);
@@ -60,16 +61,15 @@ export function useWebSocket(pollId) {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log(' WebSocket message received:', data);
           
           if (data.type === 'results') {
             hasReceivedWSUpdate.current = true;
             setResults(data.poll);
-            console.log(' Real-time update received:', data.poll.totalVotes, 'votes');
+            setRefresh(true)
           } else if (data.type === 'poll_update') {
             hasReceivedWSUpdate.current = true;
             setResults(data.poll);
-            console.log(' Poll update received:', data.poll.totalVotes, 'votes');
+            setRefresh(true)
           } else {
             console.log('ℹ Unknown message type:', data.type);
           }
@@ -134,5 +134,5 @@ export function useWebSocket(pollId) {
     };
   }, [connect, stopPolling]);
 
-  return { results, isConnected };
+  return { results, isConnected ,refresh, setRefresh};
 }
