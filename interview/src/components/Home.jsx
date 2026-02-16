@@ -60,7 +60,7 @@ export default function Home() {
 
   const handlePollCreated = (pollId) => {
     setIsModalOpen(false);
-    useWebSocket(pollId);
+    useWebSocket("refresh");
     navigate(`/poll/${pollId}`);
   };
 

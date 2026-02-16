@@ -18,28 +18,28 @@ const wss = new WebSocketServer({ server });
 async function connectDatabase() {
   try {
     const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/polling-app';
-    
+
     await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
-    
+
     console.log(' MongoDB connected successfully');
-    
+
     mongoose.connection.on('error', (err) => {
       console.error(' MongoDB connection error:', err);
     });
-    
+
     mongoose.connection.on('disconnected', () => {
       console.warn('  MongoDB disconnected');
     });
-    
+
     process.on('SIGINT', async () => {
       await mongoose.connection.close();
       console.log('MongoDB connection closed through app termination');
       process.exit(0);
     });
-    
+
   } catch (error) {
     console.error('Please ensure MongoDB is running: mongod');
     process.exit(1);
@@ -56,20 +56,27 @@ const pollConnections = new Map();
 wss.on('connection', (ws, req) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pollId = url.searchParams.get('pollId');
-  
+
   if (!pollId) {
     ws.close(1008, 'Poll ID required');
     return;
   }
-  
-  if (!pollConnections.has(pollId)) {
-    pollConnections.set(pollId, new Set());
+
+  if (pollId !== "refresh") {
+    if (!pollConnections.has(pollId)) {
+      pollConnections.set(pollId, new Set());
+    }
+    pollConnections.get(pollId).add(ws);
+
+
+    sendPollResults(pollId, ws);
   }
-  pollConnections.get(pollId).add(ws);
-  
-  
-  sendPollResults(pollId, ws);
-  
+
+
+
+
+  sendPollRefresh(pollId, ws);
+
   ws.on('close', () => {
     const connections = pollConnections.get(pollId);
     if (connections) {
@@ -79,29 +86,63 @@ wss.on('connection', (ws, req) => {
       }
     }
   });
-  
+
   ws.on('error', (error) => {
     console.error('WebSocket error:', error);
   });
 });
 
+async function sendPollRefresh(pollId, targetWs = null) {
+  try {
+
+
+    const results = {
+      type: 'refresh',
+      poll: {
+        id: "refresh"
+      }
+    };
+
+    const message = JSON.stringify(results);
+
+    if (targetWs) {
+      if (targetWs.readyState === 1) {
+        targetWs.send(message);
+      }
+    } else {
+      const connections = pollConnections.get(pollId);
+      if (connections) {
+        let sent = 0;
+        connections.forEach(client => {
+          if (client.readyState === 1) {
+            client.send(message);
+            sent++;
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error sending poll results:', error);
+  }
+}
+
 async function sendPollResults(pollId, targetWs = null) {
   try {
     const poll = await Poll.findById(pollId).lean();
     if (!poll) return;
-    
+
     const voteCounts = await Vote.aggregate([
       { $match: { pollId } },
       { $group: { _id: '$optionId', count: { $sum: 1 } } }
     ]);
-    
+
     const voteMap = {};
     let totalVotes = 0;
     voteCounts.forEach(v => {
       voteMap[v._id] = v.count;
       totalVotes += v.count;
     });
-    
+
     const results = {
       type: 'results',
       poll: {
@@ -115,9 +156,9 @@ async function sendPollResults(pollId, targetWs = null) {
         totalVotes
       }
     };
-    
+
     const message = JSON.stringify(results);
-    
+
     if (targetWs) {
       if (targetWs.readyState === 1) {
         targetWs.send(message);
@@ -152,15 +193,15 @@ app.get('/api/polls/:pollId/results', getPollResults);
 
 app.post('/api/polls/:pollId/vote', async (req, res) => {
   await submitVote(req, res);
-  
+
   if (res.statusCode === 200) {
     broadcastPollUpdate(req.params.pollId);
   }
 });
 
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     activePolls: pollConnections.size,
     totalViewers: Array.from(pollConnections.values()).reduce((sum, set) => sum + set.size, 0)
@@ -182,10 +223,10 @@ const PORT = process.env.PORT || 3001;
 async function startServer() {
   try {
     await connectDatabase();
-    
+
     server.listen(PORT, () => {
       console.log('');
-      
+
       console.log('✅ Ready to accept poll creation and real-time voting');
       console.log('');
     });

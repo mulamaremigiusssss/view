@@ -18,13 +18,11 @@ export function useWebSocket(pollId) {
   const hasReceivedWSUpdate = useRef(false);
 
   const startPolling = useCallback(() => {
-    console.log(' Starting polling fallback...');
     
     const poll = async () => {
       try {
         const data = await getPoll(pollId);
         setResults(data.poll);
-        console.log('Polling update:', data.poll.totalVotes, 'votes');
       } catch (err) {
         console.error('Polling error:', err);
       }
@@ -37,7 +35,6 @@ export function useWebSocket(pollId) {
 
   const stopPolling = useCallback(() => {
     if (pollingIntervalRef.current) {
-      console.log('⏹ Stopping polling fallback');
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
@@ -47,12 +44,10 @@ export function useWebSocket(pollId) {
     if (!pollId || !shouldReconnect.current) return;
 
     try {
-      console.log(' Connecting to WebSocket:', `${WS_URL}?pollId=${pollId}`);
       const ws = new WebSocket(`${WS_URL}?pollId=${pollId}`);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log('WebSocket connected successfully');
         setIsConnected(true);
         reconnectAttempts.current = 0;
         stopPolling(); 
@@ -63,14 +58,20 @@ export function useWebSocket(pollId) {
           const data = JSON.parse(event.data);
           
           if (data.type === 'results') {
+
             hasReceivedWSUpdate.current = true;
             setResults(data.poll);
-            setRefresh(true)
           } else if (data.type === 'poll_update') {
             hasReceivedWSUpdate.current = true;
             setResults(data.poll);
+          
+          
+          }else if (data.type === 'refresh') {
+            
             setRefresh(true)
-          } else {
+          } 
+          
+          else {
             console.log('ℹ Unknown message type:', data.type);
           }
         } catch (error) {
