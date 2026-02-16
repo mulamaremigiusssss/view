@@ -22,9 +22,11 @@ export default function PollView() {
     async function loadPoll() {
       try {
         const data = await getPoll(pollId);
+        
         setHasVoted(data.hasVoted);
         setUserVote(data.userVote);
         setShareUrl(window.location.href);
+        useWebSocket(pollId)
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) {
           setError('Poll not found');

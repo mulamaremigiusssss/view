@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPoll, ApiError } from '../utils/api';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 export default function CreatePoll() {
   const navigate = useNavigate();
@@ -47,7 +48,11 @@ export default function CreatePoll() {
 
     try {
       const data = await createPoll(question.trim(), validOptions.map(opt => opt.trim()));
-      navigate(`/poll/${data.pollId}`);
+      useWebSocket(data.pollId)
+      setInterval(() => {
+        navigate(`/poll/${data.pollId}`);
+      }, 1000);
+      
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);

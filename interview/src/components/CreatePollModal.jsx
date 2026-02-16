@@ -54,6 +54,7 @@ export default function CreatePollModal({ isOpen, onClose, onPollCreated }) {
 
     try {
       const data = await createPoll(question.trim(), validOptions.map(opt => opt.trim()));
+      
       onPollCreated(data.pollId);
     } catch (err) {
       if (err instanceof ApiError) {

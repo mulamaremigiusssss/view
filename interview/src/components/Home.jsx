@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import CreatePollModal from './CreatePollModal';
 import PollCard from './PollCard';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 export default function Home() {
   const navigate = useNavigate();
+
   const [polls, setPolls] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,6 +16,7 @@ export default function Home() {
   useEffect(() => {
     loadPolls();
   }, []);
+
 
   async function loadPolls() {
     try {
@@ -32,6 +35,7 @@ export default function Home() {
 
   const handlePollCreated = (pollId) => {
     setIsModalOpen(false);
+    useWebSocket(pollId);
     navigate(`/poll/${pollId}`);
   };
 
@@ -284,7 +288,7 @@ export default function Home() {
                   poll={poll}
                   index={index}
                   onViewPoll={handleViewPoll}
-                  
+
                 />
               ))}
             </div>
@@ -292,7 +296,7 @@ export default function Home() {
         )}
       </main>
 
-      
+
 
       <CreatePollModal
         isOpen={isModalOpen}
