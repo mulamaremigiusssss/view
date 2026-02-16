@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { submitVote, getPoll, ApiError } from '../utils/api';
 import { useRef } from 'react';
+const WS_URL = 'wss://view-ezh5.onrender.com';
 
 export default function PollCard({ poll, index, onViewPoll}) {
   const [pollData, setPollData] = useState(poll);
