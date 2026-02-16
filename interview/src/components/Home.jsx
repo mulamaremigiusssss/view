@@ -15,20 +15,7 @@ export default function Home() {
     loadPolls();
   }, []);
 
-  async function loadPolls() {
-    try {
-      setIsLoading(true);
-      const response = await fetch('https://view-ezh5.onrender.com/api/poll/all');
-      if (response.ok) {
-        const data = await response.json();
-        setPolls(data.polls || []);
-      }
-    } catch (err) {
-      setError('Failed to load polls');
-    } finally {
-      setIsLoading(false);
-    }
-  }
+ 
 
   const handlePollCreated = (pollId) => {
     setIsModalOpen(false);
@@ -284,7 +271,6 @@ export default function Home() {
                   poll={poll}
                   index={index}
                   onViewPoll={handleViewPoll}
-                  onVoteUpdate={loadPolls}
                 />
               ))}
             </div>

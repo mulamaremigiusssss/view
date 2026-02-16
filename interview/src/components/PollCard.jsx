@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { submitVote, getPoll, ApiError } from '../utils/api';
+import { useRef } from 'react';
 
-export default function PollCard({ poll, index, onViewPoll, onVoteUpdate }) {
+export default function PollCard({ poll, index, onViewPoll}) {
   const [pollData, setPollData] = useState(poll);
   const [hasVoted, setHasVoted] = useState(false);
   const [userVote, setUserVote] = useState(null);
@@ -12,21 +13,43 @@ export default function PollCard({ poll, index, onViewPoll, onVoteUpdate }) {
   const [hoveredOption, setHoveredOption] = useState(null);
   const [shareUrl, setShareUrl] = useState('');
   const [copied, setCopied] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const wsRef = useRef(null);
+
+
   useEffect(() => {
-    async function loadPoll() {
+    if (!poll.id) return;
+    setShareUrl(`${window.location.origin}/poll/${poll.id}`);
+    const ws = new WebSocket(`${WS_URL}?pollId=${poll.id}`);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log(`🔗 WebSocket connected for poll card: ${poll.id}`);
+    };
+
+    ws.onmessage = (event) => {
       try {
-        setShareUrl(`${window.location.origin}/poll/${poll.id}`);
+        const data = JSON.parse(event.data);
+        if (data.type === 'results') {
+          setPollData(data.poll);
+        }
       } catch (err) {
-        setError('Poll not found');
-
-      } finally {
-        setIsLoading(false);
+        console.error('Failed to parse WebSocket message:', err);
       }
-    }
+    };
 
+    ws.onerror = (error) => {
+      console.error(`WebSocket error for poll ${poll.id}:`, error);
+    };
 
-    loadPoll();
+    ws.onclose = () => {
+      console.log(`🔌 WebSocket disconnected for poll: ${poll.id}`);
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
   }, [poll.id]);
 
 
@@ -64,12 +87,10 @@ export default function PollCard({ poll, index, onViewPoll, onVoteUpdate }) {
 
     try {
       await submitVote(poll.id, optionId);
-      setHasVoted(true);
       setUserVote(optionId);
+      setHasVoted(true);
 
-      const data = await getPoll(poll.id);
-      setPollData(data.poll);
-      onVoteUpdate();
+
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
@@ -178,7 +199,7 @@ export default function PollCard({ poll, index, onViewPoll, onVoteUpdate }) {
                     ? 'cursor-default'
                     : 'hover:shadow-xl hover:shadow-amber-500/10 cursor-pointer'
                     }`}
-                    style={{padding:6}}
+                  style={{ padding: 6 }}
                 >
                   <div className={`absolute inset-0 transition-all duration-500 ${isSelected
                     ? 'bg-linear-to-r from-slate-800 to-slate-900 border-2 border-amber-500/50'
@@ -326,7 +347,7 @@ export default function PollCard({ poll, index, onViewPoll, onVoteUpdate }) {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "stretch",  
+              alignItems: "stretch",
               gap: "16px",
               width: "100%"
             }}
@@ -341,7 +362,7 @@ export default function PollCard({ poll, index, onViewPoll, onVoteUpdate }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                height: "100%"   
+                height: "100%"
               }}
             >
               <div className="absolute inset-0 bg-linear-to-r from-slate-800 to-slate-900 transition-all duration-300"></div>
@@ -394,7 +415,7 @@ export default function PollCard({ poll, index, onViewPoll, onVoteUpdate }) {
                 color: "#cbd5e1",
                 gap: "8px",
                 whiteSpace: "nowrap",
-                height: "100%" 
+                height: "100%"
               }}
             >
               {copied ? (
