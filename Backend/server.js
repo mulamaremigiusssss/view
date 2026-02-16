@@ -3,6 +3,7 @@ import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import { createPoll, getPoll, submitVote, getPollResults, getAllPolls } from './controllers/pollController.js';
 import Poll from './models/Poll.js';
 import Vote from './models/Vote.js';
@@ -13,11 +14,10 @@ const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
-import mongoose from 'mongoose';
 
 async function connectDatabase() {
   try {
-    const mongoUri = process.env.MONGODB_URI || '';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/polling-app';
     
     await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 5000,
@@ -27,11 +27,11 @@ async function connectDatabase() {
     console.log(' MongoDB connected successfully');
     
     mongoose.connection.on('error', (err) => {
-      console.error('MongoDB connection error:', err);
+      console.error(' MongoDB connection error:', err);
     });
     
     mongoose.connection.on('disconnected', () => {
-      console.warn('MongoDB disconnected');
+      console.warn('  MongoDB disconnected');
     });
     
     process.on('SIGINT', async () => {
@@ -46,18 +46,19 @@ async function connectDatabase() {
   }
 }
 
+
 app.use(cors());
 app.use(express.json());
 
+
 const pollConnections = new Map();
 
-
 wss.on('connection', (ws, req) => {
-  const url = new URL(req.url, `https://${req.headers.host}`);
+  const url = new URL(req.url, `http://${req.headers.host}`);
   const pollId = url.searchParams.get('pollId');
   
   if (!pollId) {
-    ws.close(1008, 'Poll ID required please');
+    ws.close(1008, 'Poll ID required');
     return;
   }
   
@@ -74,7 +75,6 @@ wss.on('connection', (ws, req) => {
     const connections = pollConnections.get(pollId);
     if (connections) {
       connections.delete(ws);
-      console.log(`📡 WebSocket disconnected from poll: ${pollId} (${connections.size} viewers remaining)`);
       if (connections.size === 0) {
         pollConnections.delete(pollId);
       }
@@ -133,7 +133,7 @@ async function sendPollResults(pollId, targetWs = null) {
             sent++;
           }
         });
-        console.log(`📤 Broadcast to ${sent} viewers of poll ${pollId}`);
+        console.log(` Broadcast to ${sent} viewers of poll ${pollId}`);
       }
     }
   } catch (error) {
@@ -146,13 +146,10 @@ export function broadcastPollUpdate(pollId) {
 }
 
 
-
-app.post('/api/polls', createPoll);
 app.get('/api/poll/all', getAllPolls);
+app.post('/api/polls', createPoll);
 app.get('/api/polls/:pollId', getPoll);
 app.get('/api/polls/:pollId/results', getPollResults);
-
-
 
 app.post('/api/polls/:pollId/vote', async (req, res) => {
   await submitVote(req, res);
@@ -181,7 +178,6 @@ app.use((err, req, res, next) => {
 });
 
 
-
 const PORT = process.env.PORT || 3001;
 
 async function startServer() {
@@ -189,13 +185,13 @@ async function startServer() {
     await connectDatabase();
     
     server.listen(PORT, () => {
-
+      console.log('');
       
       console.log('✅ Ready to accept poll creation and real-time voting');
- 
+      console.log('');
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('❌ Failed to start server:', error);
     process.exit(1);
   }
 }
