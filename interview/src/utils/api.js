@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'https://view-ezh5.onrender.com';
+const API_URL = 'https://view-ezh5.onrender.com';
 
 class ApiError extends Error {
   constructor(message, status, data) {
