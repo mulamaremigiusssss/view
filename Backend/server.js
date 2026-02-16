@@ -21,7 +21,7 @@ const pollConnections = new Map();
 
 
 wss.on('connection', (ws, req) => {
-  const url = new URL(req.url, 'http://localhost');
+  const url = new URL(req.url, 'https://view-ezh5.onrender.com');
   const pollId = url.searchParams.get('pollId');
   
   if (!pollId) {
@@ -157,20 +157,13 @@ async function startServer() {
     await connectDatabase();
     
     server.listen(PORT, () => {
-      console.log('');
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('🚀 POLLING SERVER STARTED');
-      console.log('═══════════════════════════════════════════════════════');
-      console.log(`📍 HTTP Server:      http://localhost:${PORT}`);
-      console.log(`📍 WebSocket Server: ws://localhost:${PORT}`);
-      console.log(`📍 API Endpoints:    http://localhost:${PORT}/api/*`);
-      console.log(`📍 Health Check:     http://localhost:${PORT}/health`);
-      console.log('═══════════════════════════════════════════════════════');
+
+      
       console.log('✅ Ready to accept poll creation and real-time voting');
-      console.log('');
+ 
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 }

@@ -9,15 +9,14 @@ export async function connectDatabase() {
       socketTimeoutMS: 45000,
     });
     
-    console.log('✅ MongoDB connected successfully');
-    console.log(`📊 Database: ${mongoose.connection.name}`);
+    console.log(' MongoDB connected successfully');
     
     mongoose.connection.on('error', (err) => {
-      console.error('❌ MongoDB connection error:', err);
+      console.error('MongoDB connection error:', err);
     });
     
     mongoose.connection.on('disconnected', () => {
-      console.warn('⚠️  MongoDB disconnected');
+      console.warn('MongoDB disconnected');
     });
     
     process.on('SIGINT', async () => {
@@ -27,7 +26,6 @@ export async function connectDatabase() {
     });
     
   } catch (error) {
-    console.error('❌ MongoDB connection failed:', error.message);
     console.error('Please ensure MongoDB is running: mongod');
     process.exit(1);
   }

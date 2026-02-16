@@ -35,7 +35,6 @@ const voteSchema = new mongoose.Schema({
   timestamps: false
 });
 
-// Compound indexes for anti-abuse
 voteSchema.index({ pollId: 1, fingerprint: 1 }, { unique: true });
 voteSchema.index({ pollId: 1, ipAddress: 1, votedAt: -1 });
 voteSchema.index({ pollId: 1, optionId: 1 });

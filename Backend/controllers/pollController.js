@@ -11,7 +11,6 @@ export async function createPoll(req, res) {
   try {
     const { question, options } = req.body;
 
-    console.log("create")
     
     if (!question || typeof question !== 'string' || question.trim().length === 0) {
       return res.status(400).json({ 
@@ -60,7 +59,6 @@ export async function createPoll(req, res) {
       shareUrl: `/poll/${pollId}`
     });
   } catch (error) {
-    console.error('Create poll error:', error);
     res.status(500).json({ error: 'Failed to create poll' });
   }
 }
@@ -110,7 +108,6 @@ export async function getPoll(req, res) {
       userVote: userVote?.optionId || null
     });
   } catch (error) {
-    console.error('Get poll error:', error);
     res.status(500).json({ error: 'Failed to retrieve poll' });
   }
 }
@@ -138,7 +135,6 @@ export async function submitVote(req, res) {
     const ipAddress = getIpAddress(req);
     const userAgent = req.headers['user-agent'] || 'unknown';
     
-    // ANTI-ABUSE CHECK #1: Duplicate vote prevention
     const duplicateCheck = await checkDuplicateVote(pollId, fingerprint);
     if (duplicateCheck.isDuplicate) {
       return res.status(403).json({ 
@@ -148,7 +144,6 @@ export async function submitVote(req, res) {
       });
     }
     
-    // ANTI-ABUSE CHECK #2: Rate limiting
     const rateLimitCheck = await checkRateLimit(pollId, ipAddress);
     if (!rateLimitCheck.allowed) {
       return res.status(429).json({ 
@@ -177,7 +172,6 @@ export async function submitVote(req, res) {
         mechanism: 'fingerprint'
       });
     }
-    console.error('Submit vote error:', error);
     res.status(500).json({ error: 'Failed to submit vote' });
   }
 }
@@ -216,7 +210,6 @@ export async function getPollResults(req, res) {
     
     res.json(results);
   } catch (error) {
-    console.error('Get results error:', error);
     res.status(500).json({ error: 'Failed to retrieve results' });
   }
 }
@@ -229,7 +222,6 @@ export async function getAllPolls(req, res) {
       .lean();
      
 
-    console.log("mulama")
     const pollsWithVotes = await Promise.all(
       polls.map(async (poll) => {
         const voteCounts = await Vote.aggregate([
@@ -260,7 +252,6 @@ export async function getAllPolls(req, res) {
     
     res.json({ polls: pollsWithVotes });
   } catch (error) {
-    console.error('Get all polls error:', error);
     res.status(500).json({ error: 'Failed to retrieve polls' });
   }
 }
