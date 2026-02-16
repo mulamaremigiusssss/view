@@ -53,7 +53,7 @@ const pollConnections = new Map();
 
 
 wss.on('connection', (ws, req) => {
-  const url = new URL(req.url, 'ws://view-silk.vercel.app/');
+  const url = new URL(req.url, `https://${req.headers.host}`);
   const pollId = url.searchParams.get('pollId');
   
   if (!pollId) {

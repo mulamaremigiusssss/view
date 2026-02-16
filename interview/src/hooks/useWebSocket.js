@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-const WS_URL = 'ws://view-ezh5.onrender.com';
+const WS_URL = 'wss://view-ezh5.onrender.com';
+
 const RECONNECT_INTERVAL = 3000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 
