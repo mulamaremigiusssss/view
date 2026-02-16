@@ -3,7 +3,6 @@ import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { connectDatabase } from './config/database.js';
 import { createPoll, getPoll, submitVote, getPollResults, getAllPolls } from './controllers/pollController.js';
 import Poll from './models/Poll.js';
 import Vote from './models/Vote.js';
@@ -13,6 +12,39 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
+
+import mongoose from 'mongoose';
+
+async function connectDatabase() {
+  try {
+    const mongoUri = process.env.MONGODB_URI || '';
+    
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    
+    console.log(' MongoDB connected successfully');
+    
+    mongoose.connection.on('error', (err) => {
+      console.error('MongoDB connection error:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.warn('MongoDB disconnected');
+    });
+    
+    process.on('SIGINT', async () => {
+      await mongoose.connection.close();
+      console.log('MongoDB connection closed through app termination');
+      process.exit(0);
+    });
+    
+  } catch (error) {
+    console.error('Please ensure MongoDB is running: mongod');
+    process.exit(1);
+  }
+}
 
 app.use(cors());
 app.use(express.json());
