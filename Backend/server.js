@@ -25,7 +25,7 @@ wss.on('connection', (ws, req) => {
   const pollId = url.searchParams.get('pollId');
   
   if (!pollId) {
-    ws.close(1008, 'Poll ID required');
+    ws.close(1008, 'Poll ID required please');
     return;
   }
   
