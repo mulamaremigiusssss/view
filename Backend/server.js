@@ -62,20 +62,18 @@ wss.on('connection', (ws, req) => {
     return;
   }
 
-  if (pollId !== "refresh") {
-    if (!pollConnections.has(pollId)) {
-      pollConnections.set(pollId, new Set());
-    }
-    pollConnections.get(pollId).add(ws);
-
-
-    sendPollResults(pollId, ws);
+  if (pollId === "refresh") {
+    sendPollRefresh(pollId, ws);
   }
 
+  if (!pollConnections.has(pollId)) {
+    pollConnections.set(pollId, new Set());
+  }
+  pollConnections.get(pollId).add(ws);
 
 
+  sendPollResults(pollId, ws);
 
-  sendPollRefresh(pollId, ws);
 
   ws.on('close', () => {
     const connections = pollConnections.get(pollId);
