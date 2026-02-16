@@ -17,7 +17,7 @@ import mongoose from 'mongoose';
 
 async function connectDatabase() {
   try {
-    const mongoUri = process.env.MONGODB_URI || '';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://mulamaremigius33_db_user:oywPPKvPaZ3ndBkR@cluster0.nmyzylx.mongodb.net/';
     
     await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 5000,
